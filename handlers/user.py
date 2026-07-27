@@ -41,7 +41,7 @@ async def grant_access_if_ready(bot: Bot, user_id: int):
         await db.set_access_granted(user_id)
         await bot.send_message(
             user_id,
-            f"🎉 Tabriklaymiz! Siz {REQUIRED_REFERRALS} ta do'stingizni taklif qildingiz.\n\n"
+            f"🎉 Tabriklaymiz! Siz {REQUIRED_REFERRALS} ta biolog tanishingizni taklif qildingiz.\n\n"
             f"Yopiq kanalga kirish uchun havola:\n{link}"
         )
 
@@ -72,7 +72,7 @@ async def show_profile(message: Message, bot: Bot, user_id: int):
         "👋 Xush kelibsiz!\n\n"
         f"🔗 Sizning referal havolangiz:\n{ref_link}\n\n"
         f"📊 Taklif qilganlaringiz: {user['points']}/{REQUIRED_REFERRALS}\n\n"
-        f"{REQUIRED_REFERRALS} ta do'stingizni ushbu havola orqali taklif qilsangiz, "
+        f"{REQUIRED_REFERRALS} ta biolog tanishingizni ushbu havola orqali taklif qilsangiz, "
         "yopiq kanalga kirish havolasini olasiz."
     )
     await message.answer(text, reply_markup=kb.profile_keyboard(ref_link))
