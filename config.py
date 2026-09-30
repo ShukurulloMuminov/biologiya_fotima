@@ -23,16 +23,7 @@ MANDATORY_CHANNELS = [
         "url": "https://t.me/fotimaismoilovaattestatsiya",
     },
     # Yangi kanal qo'shish uchun pastdagi namunani ochib, o'zingiznikini yozing:
-     {
-         "chat_id": "@Tabiyfanlarakademiyasi",
-         "title": "2-kanal",
-         "url": "https://t.me/Tabiyfanlarakademiyasi",
-     },
-    {
-         "chat_id": "@kimyoattestatsiyaNo1",
-         "title": "3-kanal",
-         "url": "https://t.me/kimyoattestatsiyaNo1",
-     },
+
     {
          "chat_id": "@Pedagogikmahoratakademiyasi",
          "title": "4-kanal",
