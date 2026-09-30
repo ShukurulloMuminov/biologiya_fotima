@@ -19,14 +19,14 @@ DB_PATH = os.getenv("DB_PATH", "referral_bot.db")
 MANDATORY_CHANNELS = [
     {
         "chat_id": "@fotimaismoilovaattestatsiya",
-        "title": "Asosiy kanal",
+        "title": "1-kanal",
         "url": "https://t.me/fotimaismoilovaattestatsiya",
     },
     # Yangi kanal qo'shish uchun pastdagi namunani ochib, o'zingiznikini yozing:
 
     {
          "chat_id": "@Pedagogikmahoratakademiyasi",
-         "title": "4-kanal",
+         "title": "2-kanal",
          "url": "https://t.me/Pedagogikmahoratakademiyasi",
      },
 
