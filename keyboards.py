@@ -1,11 +1,11 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
-from config import MANDATORY_CHANNEL_USERNAME
 
 
-def subscribe_keyboard():
+def subscribe_keyboard(channels: list[dict]):
+    """Faqat hali a'zo bo'linmagan kanallar uchun tugmalar chiqadi."""
     builder = InlineKeyboardBuilder()
-    builder.button(text="📢 Kanalga o'tish", url=f"https://t.me/{MANDATORY_CHANNEL_USERNAME.lstrip('@')}")
+    for ch in channels:
+        builder.button(text=f"📢 {ch['title']}", url=ch["url"])
     builder.button(text="✅ Tekshirish", callback_data="check_sub")
     builder.adjust(1)
     return builder.as_markup()

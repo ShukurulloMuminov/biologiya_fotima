@@ -1,3 +1,6 @@
+import asyncio
+import logging
+
 from aiogram import Router, F, Bot
 from aiogram.filters import CommandStart, CommandObject
 from aiogram.types import Message, CallbackQuery
@@ -5,19 +8,30 @@ from aiogram.types import Message, CallbackQuery
 import database as db
 import keyboards as kb
 from config import (
-    MANDATORY_CHANNEL_USERNAME, PRIVATE_CHANNEL_ID, PRIVATE_CHANNEL_INVITE_LINK,
+    MANDATORY_CHANNELS, PRIVATE_CHANNEL_ID, PRIVATE_CHANNEL_INVITE_LINK,
     REQUIRED_REFERRALS, ADMIN_IDS
 )
 
 router = Router()
+logger = logging.getLogger(__name__)
 
 
-async def is_subscribed(bot: Bot, user_id: int) -> bool:
+async def _is_member(bot: Bot, chat_id, user_id: int) -> bool:
     try:
-        member = await bot.get_chat_member(MANDATORY_CHANNEL_USERNAME, user_id)
+        member = await bot.get_chat_member(chat_id, user_id)
         return member.status not in ("left", "kicked")
-    except Exception:
+    except Exception as e:
+        # Bot kanalda admin emas yoki chat_id noto'g'ri bo'lishi mumkin
+        logger.warning("get_chat_member xatosi (chat_id=%s): %s", chat_id, e)
         return False
+
+
+async def get_unsubscribed_channels(bot: Bot, user_id: int) -> list[dict]:
+    """Foydalanuvchi hali a'zo bo'lmagan majburiy kanallar ro'yxati."""
+    results = await asyncio.gather(
+        *(_is_member(bot, ch["chat_id"], user_id) for ch in MANDATORY_CHANNELS)
+    )
+    return [ch for ch, ok in zip(MANDATORY_CHANNELS, results) if not ok]
 
 
 async def get_private_channel_id() -> int:
@@ -90,11 +104,12 @@ async def start_handler(message: Message, command: CommandObject, bot: Bot):
     if not await db.user_exists(user_id):
         await db.add_user(user_id, message.from_user.username, message.from_user.full_name, referrer_id)
 
-    if not await is_subscribed(bot, user_id):
+    missing = await get_unsubscribed_channels(bot, user_id)
+    if missing:
         await message.answer(
-            "Botdan foydalanish uchun avval quyidagi kanalga a'zo bo'ling, "
+            "Botdan foydalanish uchun avval quyidagi kanallarga a'zo bo'ling, "
             "so'ng \"✅ Tekshirish\" tugmasini bosing:",
-            reply_markup=kb.subscribe_keyboard()
+            reply_markup=kb.subscribe_keyboard(missing)
         )
         return
 
@@ -111,7 +126,8 @@ async def start_handler(message: Message, command: CommandObject, bot: Bot):
 @router.callback_query(F.data == "check_sub")
 async def check_sub_handler(callback: CallbackQuery, bot: Bot):
     user_id = callback.from_user.id
-    if await is_subscribed(bot, user_id):
+    missing = await get_unsubscribed_channels(bot, user_id)
+    if not missing:
         await callback.message.delete()
         await process_subscription_confirmed(bot, user_id)
         await show_profile(callback.message, bot, user_id)
@@ -121,7 +137,15 @@ async def check_sub_handler(callback: CallbackQuery, bot: Bot):
                 reply_markup=kb.admin_reply_keyboard()
             )
     else:
-        await callback.answer("❌ Siz hali kanalga a'zo bo'lmagansiz!", show_alert=True)
+        names = ", ".join(ch["title"] for ch in missing)
+        await callback.answer(f"❌ Hali a'zo bo'lmagansiz: {names}", show_alert=True)
+        try:
+            await callback.message.edit_reply_markup(
+                reply_markup=kb.subscribe_keyboard(missing)
+            )
+        except Exception:
+            # Ro'yxat o'zgarmagan bo'lsa Telegram "message is not modified" xatosini beradi
+            pass
 
 
 @router.callback_query(F.data == "my_stats")
